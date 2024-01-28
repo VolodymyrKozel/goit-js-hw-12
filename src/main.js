@@ -67,7 +67,7 @@ function handleSubmit(e) {
 function scrollBehavior(height) {
   scrollBy({
     top: height,
-    behavior: 'smooth'
+    behavior: 'smooth',
   });
 }
 function resetPages() {
@@ -91,7 +91,7 @@ async function getData() {
         : (btnMore.style.display = 'none');
     }
     // Check the end of the collection to display an alert
-    if (searchParams.get('page') > totalPages && totalPages !== 0)  {
+    if (searchParams.get('page') > totalPages && totalPages !== 0) {
       btnMore.style.display = 'none';
       return iziToast.error(noMorePages);
     }
