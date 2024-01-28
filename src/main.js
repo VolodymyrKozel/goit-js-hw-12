@@ -10,7 +10,6 @@ const galleryList = document.querySelector('.gallery-list');
 const loader = document.querySelector('.loader-wrapper');
 const API_KEY = '42027651-7bedd500762feb24dffc0a2de';
 const url = `https://pixabay.com/api/?`;
-axios.defaults.baseURL = url;
 /* params */
 const paramsRequest = {
   key: API_KEY,
@@ -18,7 +17,7 @@ const paramsRequest = {
   image_type: 'photo',
   orientation: 'horizontal',
   safesearch: true,
-  per_page: 40,
+  per_page: 5,
   page: 1,
 };
 let totalPages = 0;
@@ -43,41 +42,55 @@ const iziToastOptions = {
 const noMorePages = {
   position: 'topRight',
   message: "We're sorry, there are no more posts to load",
-}
+};
 const lightbox = new SimpleLightbox('.gallery-list a', simplelightboxOptions);
 
 form.addEventListener('submit', handleSubmit);
-btnMore.addEventListener('click', handleMore);
-function handleMore(e) {
+btnMore.addEventListener('click', handleGetMorePages);
+function handleGetMorePages() {
+  loader.style.display = 'flex';
+  btnMore.style.display = 'none';
   getData();
+  scrollBehavior(loader.getBoundingClientRect().height);
 }
 function handleSubmit(e) {
   e.preventDefault();
   //reset page
-  searchParams.set('page', 1);
-  totalPages = 0;
+  resetPages();
   loader.style.display = 'flex';
   galleryList.innerHTML = '';
   searchParams.set('q', e.target.elements.search.value);
   getData();
   this.reset();
 }
+function scrollBehavior(height) {
+  scrollBy({
+    top: height,
+    behavior: 'smooth'
+  });
+}
+function resetPages() {
+  totalPages = 0;
+  searchParams.set('page', 1);
+}
+// get data from server
 async function getData() {
   try {
     const images = await fetchImages();
-        // Check if search return any image
-        images.totalHits > 0
-        ? renderImages(images)
-        : iziToast.error(iziToastOptions);
-      loader.style.display = 'none';
+    // Check if search return any image
+    images.totalHits > 0
+      ? renderImages(images)
+      : iziToast.error(iziToastOptions);
+    loader.style.display = 'none';
     // In our case total number of pages is calculated on frontend
     if (totalPages === 0) {
-      totalPages = Math.ceil(
-        images.totalHits / searchParams.get('per_page'));
-       totalPages > 1 ? btnMore.style.display = 'block' :  btnMore.style.display = 'none';;
+      totalPages = Math.ceil(images.totalHits / searchParams.get('per_page'));
+      totalPages > 1
+        ? (btnMore.style.display = 'block')
+        : (btnMore.style.display = 'none');
     }
     // Check the end of the collection to display an alert
-    if (searchParams.get('page') > totalPages) {
+    if (searchParams.get('page') > totalPages && totalPages !== 0)  {
       btnMore.style.display = 'none';
       return iziToast.error(noMorePages);
     }
@@ -91,7 +104,6 @@ async function getData() {
 
 async function fetchImages() {
   const response = await axios.get(url + searchParams);
-  console.log(url + searchParams);
   return response.data;
 }
 
@@ -126,4 +138,6 @@ const markup = images => {
 function renderImages(images) {
   galleryList.insertAdjacentHTML('beforeend', markup(images.hits));
   lightbox.refresh();
+  scrollBehavior(galleryList.childNodes[0].getBoundingClientRect().height * 2);
+  btnMore.style.display = 'block';
 }

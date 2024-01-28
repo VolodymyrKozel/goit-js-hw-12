@@ -106,6 +106,9 @@
   margin: 0 auto;
   display: none;
 }
+.display-none {
+  display: none;
+}
 /* ligthbox overlay style */
 .sl-overlay {
   background-color: rgb(46, 47, 66) !important;
@@ -175,8 +178,8 @@
   color: #fff !important;
 }
 .loader-wrapper {
+  padding: 24px;
   position: relative;
-  display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 50px;
