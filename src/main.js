@@ -17,7 +17,7 @@ const paramsRequest = {
   image_type: 'photo',
   orientation: 'horizontal',
   safesearch: true,
-  per_page: 5,
+  per_page: 40,
   page: 1,
 };
 let totalPages = 0;
@@ -47,6 +47,7 @@ const lightbox = new SimpleLightbox('.gallery-list a', simplelightboxOptions);
 
 form.addEventListener('submit', handleSubmit);
 btnMore.addEventListener('click', handleGetMorePages);
+
 function handleGetMorePages() {
   loader.style.display = 'flex';
   btnMore.style.display = 'none';
