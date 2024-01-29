@@ -9,7 +9,7 @@ const btnMore = document.querySelector('.btn-more');
 const galleryList = document.querySelector('.gallery-list');
 const loader = document.querySelector('.loader-wrapper');
 const API_KEY = '42027651-7bedd500762feb24dffc0a2de';
-const url = `https://pixabay.com/api/?`;
+axios.defaults.baseURL = 'https://pixabay.com/api/';
 /* params */
 const paramsRequest = {
   key: API_KEY,
@@ -21,7 +21,7 @@ const paramsRequest = {
   page: 1,
 };
 let totalPages = 0;
-const searchParams = new URLSearchParams(paramsRequest);
+/* const searchParams = new URLSearchParams(paramsRequest); */
 
 const simplelightboxOptions = {
   captionsData: 'alt',
@@ -49,18 +49,18 @@ form.addEventListener('submit', handleSubmit);
 btnMore.addEventListener('click', handleGetMorePages);
 
 function handleGetMorePages() {
-  loader.style.display = 'flex';
-  btnMore.style.display = 'none';
+  loaderOffOn('flex');
+  btnMoreDisable();
   getData();
   scrollBehavior(loader.getBoundingClientRect().height);
 }
 function handleSubmit(e) {
   e.preventDefault();
-  //reset page
   resetPages();
-  loader.style.display = 'flex';
+  loaderOffOn('flex');
   galleryList.innerHTML = '';
-  searchParams.set('q', e.target.elements.search.value);
+  paramsRequest.q = e.target.elements.search.value;
+  e.target.elements.perPage.value !== "" ? paramsRequest.per_page = e.target.elements.perPage.value : paramsRequest.per_page = 40;
   getData();
   this.reset();
 }
@@ -72,39 +72,45 @@ function scrollBehavior(height) {
 }
 function resetPages() {
   totalPages = 0;
-  searchParams.set('page', 1);
+  paramsRequest.page =  1;
+}
+function getTotalPages(images) {
+  totalPages = Math.ceil(images.totalHits / paramsRequest.per_page);
+}
+function btnMoreDisable(){
+  totalPages > 1
+  ? (btnMore.style.display = 'block')
+  : (btnMore.style.display = 'none');
+  if (paramsRequest.page >= totalPages && totalPages !== 0) {
+    btnMore.style.display = 'none';
+    return iziToast.error(noMorePages);
+  }
+}
+function loaderOffOn(display) {
+  loader.style.display = display;
 }
 // get data from server
 async function getData() {
   try {
     const images = await fetchImages();
+    totalPages === 0 ? getTotalPages(images) : console.log('getTotalPages not run');
+    btnMoreDisable();
     // Check if search return any image
     images.totalHits > 0
       ? renderImages(images)
       : iziToast.error(iziToastOptions);
-    loader.style.display = 'none';
-    // In our case total number of pages is calculated on frontend
-    if (totalPages === 0) {
-      totalPages = Math.ceil(images.totalHits / searchParams.get('per_page'));
-      totalPages > 1
-        ? (btnMore.style.display = 'block')
-        : (btnMore.style.display = 'none');
-    }
+      loaderOffOn('none');
     // Check the end of the collection to display an alert
-    if (searchParams.get('page') > totalPages && totalPages !== 0) {
-      btnMore.style.display = 'none';
-      return iziToast.error(noMorePages);
-    }
+
     // Increase the group number
-    let currentPage = Number(searchParams.get('page'));
-    searchParams.set('page', (currentPage += 1));
+    paramsRequest.page++;
   } catch (error) {
     console.log(error);
   }
 }
 
 async function fetchImages() {
-  const response = await axios.get(url + searchParams);
+  const response = await axios.get('', { params: paramsRequest });
   return response.data;
 }
 
@@ -140,5 +146,4 @@ function renderImages(images) {
   galleryList.insertAdjacentHTML('beforeend', markup(images.hits));
   lightbox.refresh();
   scrollBehavior(galleryList.childNodes[0].getBoundingClientRect().height * 2);
-  btnMore.style.display = 'block';
 }
